@@ -1,0 +1,50 @@
+name: Build with BlocksDS
+description: Build a Nintendo DS .nds ROM with BlocksDS and optionally upload it as an artifact.
+author: JamzOJamz
+branding:
+  icon: package
+  color: purple
+
+inputs:
+  image:
+    description: BlocksDS Docker image to build with.
+    default: skylyrac/blocksds:slim-latest
+  working-directory:
+    description: Directory containing the Makefile, relative to the repo root.
+    default: "."
+  make-args:
+    description: Extra arguments passed to make.
+    default: ""
+  rom-path:
+    description: Path or glob of the ROM to upload, relative to working-directory.
+    default: "*.nds"
+  upload-artifact:
+    description: Upload the ROM as a workflow artifact.
+    default: "true"
+  artifact-name:
+    description: Name of the uploaded artifact.
+    default: DS ROM
+
+runs:
+  using: composite
+  steps:
+    - name: Build .nds
+      shell: bash
+      env:
+        IMAGE: ${{ inputs.image }}
+        WORKDIR: ${{ inputs.working-directory }}
+        MAKE_ARGS: ${{ inputs.make-args }}
+      run: |
+        # MAKE_ARGS is intentionally unquoted so multiple args split correctly
+        docker run --rm \
+          -v "$GITHUB_WORKSPACE":/work \
+          -w "/work/$WORKDIR" \
+          "$IMAGE" make $MAKE_ARGS
+
+    - name: Upload ROM
+      if: inputs.upload-artifact == 'true'
+      uses: actions/upload-artifact@v6
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ inputs.working-directory }}/${{ inputs.rom-path }}
+        if-no-files-found: error
