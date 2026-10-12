@@ -11,12 +11,10 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: JamzOJamz/build-blocksds@v1
-        with:
-          rom-path: MyGame.nds
 ```
 
 ## Inputs
